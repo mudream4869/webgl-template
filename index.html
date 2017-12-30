@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>ICG WebGL &mdash; HW1</title>
+<title>WebGL Template</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
@@ -26,9 +26,6 @@
         vec3 vertColor = fragmentColor.rgb;
         vec3 L = normalize(lightPosition - vertPos);
         vec3 N = normalize(vertNormal);
-
-        if(dot(L, N) < 0.0) // Dual face
-            N = -N;
 
         float lambertian = dot(L, N);
         float specular = .0;
