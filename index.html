@@ -1,0 +1,102 @@
+<html>
+
+<head>
+<title>ICG WebGL &mdash; HW1</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="flatFragShader" type="fragment">
+    #extension GL_OES_standard_derivatives : enable
+
+    precision mediump float;
+    varying vec4 fragcolor;
+
+    const float Ka = 1.;
+    const float Kd = 1.;
+    const float Ks = 1.;
+    const float shininessVal = 2.0;
+
+    varying vec3 vertPos;
+    varying vec4 fragmentColor;
+
+    vec3 calLight(vec3 vertNormal,
+                  vec3 lightPosition, vec3 lightColor, vec3 lightDiffuse){
+        vec3 vertColor = fragmentColor.rgb;
+        vec3 L = normalize(lightPosition - vertPos);
+        vec3 N = normalize(vertNormal);
+
+        if(dot(L, N) < 0.0) // Dual face
+            N = -N;
+
+        float lambertian = dot(L, N);
+        float specular = .0;
+
+        vec3 R = reflect(-L, N);      // Reflected light vector
+        vec3 V = normalize(-vertPos); // Vector to viewer
+        float specAngle = max(dot(R, V), 0.0);
+        specular = pow(specAngle, shininessVal);
+
+        return Kd*lambertian*lightDiffuse*vertColor + Ks*specular*lightColor;
+    }
+
+    void main(void) {
+        const vec3 lightPosition1 = vec3(0, 10, 0);
+        const vec3 lightColor1 = vec3(0, 1, 1);
+        const vec3 lightDiffuse1 = vec3(.5, 0., 0.);
+
+        const vec3 lightPosition2 = vec3(20, 0, 0);
+        const vec3 lightColor2 = vec3(1, 0, 0);
+        const vec3 lightDiffuse2 = vec3(.5, 0., 0.);
+
+        const vec3 ambientColor = vec3(.2, 0, 0);
+
+        vec3 nVertexNormal = normalize(cross(dFdx(vertPos), dFdy(vertPos)));
+
+		gl_FragColor = vec4(
+            calLight(nVertexNormal, lightPosition1, lightColor1, lightDiffuse1) +
+            calLight(nVertexNormal, lightPosition2, lightColor2, lightDiffuse2) +
+            Ka*ambientColor,
+            1.0
+        );
+    }
+</script>
+
+<script id="flatVertShader" type="vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat4 uNMatrix;
+
+    uniform sampler2D uSampler;
+
+    varying vec3 vertPos;
+    varying vec4 fragmentColor;
+
+    void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+        vec4 vertPos4 = uMVMatrix * vec4(aVertexPosition, 1.0);
+        vertPos = vec3(vertPos4)/vertPos4.w;
+
+        fragmentColor = texture2D(uSampler, vec2(aTextureCoord.s, aTextureCoord.t));	
+    }
+</script>
+
+<script type="text/javascript" src="index.js"></script>
+
+</head>
+
+
+<body onload="webGLStart();">
+ 
+    <div>
+        <canvas id="ICG-canvas" style="border: none;" width="800" height="600"></canvas>
+    </div>
+
+</body>
+
+</html>
